@@ -3,7 +3,7 @@ return {
     'stevearc/oil.nvim',
     ---@module 'oil'
     ---@type oil.SetupOpts
-    opts = {},
+    opts = { default_file_explorer = false },
     -- Optional dependencies
     dependencies = { { 'echasnovski/mini.icons', opts = {} } },
     -- dependencies = { "nvim-tree/nvim-web-devicons" }, -- use if you prefer nvim-web-devicons
@@ -136,7 +136,8 @@ return {
         --  the list of additional_vim_regex_highlighting and disabled languages for indent.
         additional_vim_regex_highlighting = { 'ruby' },
       },
-      indent = { enable = true, disable = { 'ruby' } },
+      -- indent = { enable = true, disable = { 'ruby', 'lua' } },
+      indent = { enable = false },
     },
     -- There are additional nvim-treesitter modules that you can use to interact
     -- with nvim-treesitter. You should go explore a few and see what interests you:
