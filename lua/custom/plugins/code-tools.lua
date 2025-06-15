@@ -8,6 +8,9 @@ return {
       {
         'L3MON4D3/LuaSnip',
         version = '2.*',
+        -- config = function()
+        --   require('luasnip.loaders.from_vscode').lazy_load { paths = { './snippets' } }
+        -- end,
         build = (function()
           -- Build Step is needed for regex support in snippets.
           -- This step is not supported in many windows environments.
@@ -28,7 +31,7 @@ return {
           --   end,
           -- },
         },
-        opts = {},
+        -- opts = {},
       },
       'folke/lazydev.nvim',
     },

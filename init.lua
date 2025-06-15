@@ -117,9 +117,18 @@ vim.o.showmode = false
 -- vim.schedule(function()
 --   vim.o.clipboard = 'unnamedplus'
 -- end)
+vim.g.clipboard = 'osc52'
 
 -- Enable break indent
 vim.o.breakindent = true
+
+-- Disable continue comments on newline
+vim.api.nvim_create_autocmd('FileType', {
+  pattern = '*',
+  callback = function()
+    vim.opt_local.formatoptions:remove { 'r', 'o' }
+  end,
+})
 
 -- Save undo history
 vim.o.undofile = true
