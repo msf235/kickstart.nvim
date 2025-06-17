@@ -378,5 +378,18 @@ require('lazy').setup({
 
 require('luasnip.loaders.from_vscode').lazy_load { paths = { './snippets' } }
 
+local function go_to_breakpoint()
+  go_to_lineno '$HOME/.cache/pdb/latest_lineno'
+end
+
+local function go_to_error()
+  go_to_lineno '$HOME/.cache/pdb/last_error_line'
+end
+
+vim.api.nvim_create_user_command('GoToBreakpoint', go_to_breakpoint, {})
+vim.api.nvim_create_user_command('GoToError', go_to_error, {})
+
+vim.keymap.set('n', 'gb', ':GoToBreakpoint<CR>', { silent = true, desc = 'Go To Breakpoint' })
+
 -- The line beneath this is called `modeline`. See `:help modeline`
 -- vim: ts=2 sts=2 sw=2 et
