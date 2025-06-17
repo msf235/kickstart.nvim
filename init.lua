@@ -378,5 +378,49 @@ require('lazy').setup({
 
 require('luasnip.loaders.from_vscode').lazy_load { paths = { './snippets' } }
 
+local function go_to_lineno(filepath)
+  -- Define the log file path
+  local log_file = vim.fn.expand(filepath)
+
+  -- Check if the log file exists
+  if vim.fn.filereadable(log_file) == 0 then
+    print('Log file not found: ' .. log_file)
+    return
+  end
+
+  -- Read all lines from the file
+  local lines = vim.fn.readfile(log_file)
+  if #lines == 0 then
+    print 'No entries in the log file.'
+    return
+  end
+
+  -- Get the last line
+  local last_entry = lines[#lines]
+
+  -- Split the line into filepath and line number
+  local filepath, linenumber = last_entry:match '(.+):(%d+)'
+  if filepath and linenumber then
+    -- Open the file and go to the specified line
+    vim.cmd('edit ' .. filepath)
+    vim.cmd(linenumber)
+  else
+    print 'Invalid format in log file.'
+  end
+end
+
+local function go_to_breakpoint()
+  go_to_lineno '$HOME/.cache/pdb/latest_lineno'
+end
+
+local function go_to_error()
+  go_to_lineno '$HOME/.cache/pdb/last_error_line'
+end
+
+vim.api.nvim_create_user_command('GoToBreakpoint', go_to_breakpoint, {})
+vim.api.nvim_create_user_command('GoToError', go_to_error, {})
+
+vim.keymap.set('n', 'gb', ':GoToBreakpoint<CR>', { silent = true, desc = 'Go To Breakpoint' })
+
 -- The line beneath this is called `modeline`. See `:help modeline`
 -- vim: ts=2 sts=2 sw=2 et
