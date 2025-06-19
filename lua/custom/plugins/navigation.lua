@@ -1,19 +1,5 @@
 return {
   {
-    'stevearc/aerial.nvim',
-    version = '*', -- This ensures you're always tracking latest stable
-    opts = {
-      backends = { 'treesitter', 'lsp' },
-    },
-    dependencies = {
-      'nvim-telescope/telescope.nvim',
-    },
-    config = function()
-      require('telescope').load_extension 'aerial'
-    end,
-  },
-
-  {
     'stevearc/oil.nvim',
     ---@module 'oil'
     ---@type oil.SetupOpts
