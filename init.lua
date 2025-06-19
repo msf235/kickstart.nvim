@@ -422,5 +422,75 @@ vim.api.nvim_create_user_command('GoToError', go_to_error, {})
 
 vim.keymap.set('n', 'gb', ':GoToBreakpoint<CR>', { silent = true, desc = 'Go To Breakpoint' })
 
+local ts_utils = require 'nvim-treesitter.ts_utils'
+local query = require 'vim.treesitter.query'
+local pickers = require 'telescope.pickers'
+local finders = require 'telescope.finders'
+local actions = require 'telescope.actions'
+local action_state = require 'telescope.actions.state'
+local conf = require('telescope.config').values
+
+local function open_scope_symbols()
+  local node = ts_utils.get_node_at_cursor()
+
+  while node and node:type() ~= 'class_definition' and node:type() ~= 'function_definition' do
+    node = node:parent()
+  end
+  if not node then
+    print 'No enclosing scope found'
+    return
+  end
+
+  -- Use Treesitter query on subtree
+  local tsquery = vim.treesitter.query.parse(
+    'python',
+    [[
+    (function_definition name: (identifier) @name)
+  ]]
+  )
+
+  local symbols = {}
+  for id, match in tsquery:iter_matches(node, 0) do
+    for id, matched_node in pairs(match) do
+      local name = vim.treesitter.query.get_node_text(matched_node, 0)
+      table.insert(symbols, { name = name, node = matched_node:parent() })
+    end
+  end
+
+  if #symbols == 0 then
+    print 'No symbols found in scope'
+    return
+  end
+
+  pickers
+    .new({}, {
+      prompt_title = 'Symbols in Current Scope',
+      finder = finders.new_table {
+        results = symbols,
+        entry_maker = function(entry)
+          return {
+            value = entry,
+            display = entry.name,
+            ordinal = entry.name,
+          }
+        end,
+      },
+      sorter = conf.generic_sorter {},
+      attach_mappings = function(prompt_bufnr)
+        actions.select_default:replace(function()
+          actions.close(prompt_bufnr)
+          local selection = action_state.get_selected_entry()
+          local node = selection.value.node
+          local range = { node:range() }
+          vim.api.nvim_win_set_cursor(0, { range[1] + 1, range[2] })
+        end)
+        return true
+      end,
+    })
+    :find()
+end
+
+vim.keymap.set('n', '<leader>ts', open_scope_symbols, { desc = 'Search symbols in scope' })
+
 -- The line beneath this is called `modeline`. See `:help modeline`
 -- vim: ts=2 sts=2 sw=2 et

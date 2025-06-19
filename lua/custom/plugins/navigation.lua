@@ -1,5 +1,19 @@
 return {
   {
+    'stevearc/aerial.nvim',
+    version = '*', -- This ensures you're always tracking latest stable
+    opts = {
+      backends = { 'treesitter', 'lsp' },
+    },
+    dependencies = {
+      'nvim-telescope/telescope.nvim',
+    },
+    config = function()
+      require('telescope').load_extension 'aerial'
+    end,
+  },
+
+  {
     'stevearc/oil.nvim',
     ---@module 'oil'
     ---@type oil.SetupOpts
@@ -65,11 +79,6 @@ return {
         --   },
         -- },
         -- pickers = {}
-        extensions = {
-          ['ui-select'] = {
-            require('telescope.themes').get_dropdown(),
-          },
-        },
       }
 
       -- Enable Telescope extensions if they are installed
