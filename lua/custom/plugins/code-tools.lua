@@ -20,6 +20,11 @@ return {
           end
           return 'make install_jsregexp'
         end)(),
+        config = function()
+          require('luasnip.loaders.from_vscode').lazy_load {
+            paths = { './snippets' },
+          }
+        end,
         dependencies = {
           -- `friendly-snippets` contains a variety of premade snippets.
           --    See the README about individual language/framework/plugin snippets:
@@ -38,36 +43,39 @@ return {
     },
     --- @module 'blink.cmp'
     --- @type blink.cmp.Config
-    opts = {
-      keymap = {
-        -- 'default' (recommended) for mappings similar to built-in completions
-        --   <c-y> to accept ([y]es) the completion.
-        --    This will auto-import if your LSP supports it.
-        --    This will expand snippets if the LSP sent a snippet.
-        -- 'super-tab' for tab to accept
-        -- 'enter' for enter to accept
-        -- 'none' for no mappings
-        --
-        -- For an understanding of why the 'default' preset is recommended,
-        -- you will need to read `:help ins-completion`
-        --
-        -- No, but seriously. Please read `:help ins-completion`, it is really good!
-        --
-        -- All presets have the following mappings:
-        -- <tab>/<s-tab>: move to right/left of your snippet expansion
-        -- <c-space>: Open menu or open docs if already open
-        -- <c-n>/<c-p> or <up>/<down>: Select next/previous item
-        -- <c-e>: Hide menu
-        -- <c-k>: Toggle signature help
-        --
-        -- See :h blink-cmp-config-keymap for defining your own keymap
-        preset = 'default',
+    opts = function(_, opts) -- Define opts with a function
+      local ls = require 'luasnip'
 
-        -- For more advanced Luasnip keymaps (e.g. selecting choice nodes, expansion) see:
-        --    https://github.com/L3MON4D3/LuaSnip?tab=readme-ov-file#keymaps
-      },
+      -- ensure keymap table exists
+      opts.keymap = opts.keymap or {}
 
-      appearance = {
+      -- Make sure we’re still using the 'default' preset:
+      opts.keymap.preset = 'default'
+
+      -- Now override only Tab and Shift-Tab:
+      opts.keymap['<Tab>'] = {
+        function(_, fallback)
+          if ls.expand_or_jumpable() then
+            ls.expand_or_jump()
+          else
+            fallback()
+          end
+        end,
+        silent = true,
+      }
+
+      opts.keymap['<S-Tab>'] = {
+        function(_, fallback)
+          if ls.jumpable(-1) then
+            ls.jump(-1)
+          else
+            fallback()
+          end
+        end,
+        silent = true,
+      }
+
+      opts.appearance = {
         -- 'mono' (default) for 'Nerd Font Mono' or 'normal' for 'Nerd Font'
         -- Adjusts spacing to ensure icons are aligned
         nerd_font_variant = 'mono',
@@ -105,15 +113,15 @@ return {
           Operator = '󰪚',
           TypeParameter = '󰬛',
         },
-      },
+      }
 
-      completion = {
+      opts.completion = {
         -- By default, you may press `<c-space>` to show the documentation.
         -- Optionally, set `auto_show = true` to show the documentation after a delay.
         documentation = { auto_show = false, auto_show_delay_ms = 500 },
-      },
+      }
 
-      sources = {
+      opts.sources = {
         default = { 'lsp', 'path', 'snippets', 'lazydev', 'copilot' },
         providers = {
           lazydev = { module = 'lazydev.integrations.blink', score_offset = 100 },
@@ -124,9 +132,7 @@ return {
             async = true,
           },
         },
-      },
-
-      snippets = { preset = 'luasnip' },
+      }
 
       -- Blink.cmp includes an optional, recommended rust fuzzy matcher,
       -- which automatically downloads a prebuilt binary when enabled.
@@ -135,11 +141,115 @@ return {
       -- the rust implementation via `'prefer_rust_with_warning'`
       --
       -- See :h blink-cmp-config-fuzzy for more information
-      fuzzy = { implementation = 'lua' },
+      opts.fuzzy = { implementation = 'lua' }
 
       -- Shows a signature help window while you type arguments for a function
-      signature = { enabled = true },
-    },
+      opts.signature = { enabled = true }
+
+      return opts
+    end,
+    -- opts = { -- Alternative, static way of defining opts
+    --   keymap = {
+    --     -- 'default' (recommended) for mappings similar to built-in completions
+    --     --   <c-y> to accept ([y]es) the completion.
+    --     --    This will auto-import if your LSP supports it.
+    --     --    This will expand snippets if the LSP sent a snippet.
+    --     -- 'super-tab' for tab to accept
+    --     -- 'enter' for enter to accept
+    --     -- 'none' for no mappings
+    --     --
+    --     -- For an understanding of why the 'default' preset is recommended,
+    --     -- you will need to read `:help ins-completion`
+    --     --
+    --     -- No, but seriously. Please read `:help ins-completion`, it is really good!
+    --     --
+    --     -- All presets have the following mappings:
+    --     -- <tab>/<s-tab>: move to right/left of your snippet expansion
+    --     -- <c-space>: Open menu or open docs if already open
+    --     -- <c-n>/<c-p> or <up>/<down>: Select next/previous item
+    --     -- <c-e>: Hide menu
+    --     -- <c-k>: Toggle signature help
+    --     --
+    --     -- See :h blink-cmp-config-keymap for defining your own keymap
+    --     preset = 'default',
+    --
+    --     -- For more advanced Luasnip keymaps (e.g. selecting choice nodes, expansion) see:
+    --     --    https://github.com/L3MON4D3/LuaSnip?tab=readme-ov-file#keymaps
+    --   },
+    --
+    --   appearance = {
+    --     -- 'mono' (default) for 'Nerd Font Mono' or 'normal' for 'Nerd Font'
+    --     -- Adjusts spacing to ensure icons are aligned
+    --     nerd_font_variant = 'mono',
+    --     -- Blink does not expose its default kind icons so you must copy them all (or set your custom ones) and add Copilot
+    --     kind_icons = {
+    --       Copilot = '',
+    --       Text = '󰉿',
+    --       Method = '󰊕',
+    --       Function = '󰊕',
+    --       Constructor = '󰒓',
+    --
+    --       Field = '󰜢',
+    --       Variable = '󰆦',
+    --       Property = '󰖷',
+    --
+    --       Class = '󱡠',
+    --       Interface = '󱡠',
+    --       Struct = '󱡠',
+    --       Module = '󰅩',
+    --
+    --       Unit = '󰪚',
+    --       Value = '󰦨',
+    --       Enum = '󰦨',
+    --       EnumMember = '󰦨',
+    --
+    --       Keyword = '󰻾',
+    --       Constant = '󰏿',
+    --
+    --       Snippet = '󱄽',
+    --       Color = '󰏘',
+    --       File = '󰈔',
+    --       Reference = '󰬲',
+    --       Folder = '󰉋',
+    --       Event = '󱐋',
+    --       Operator = '󰪚',
+    --       TypeParameter = '󰬛',
+    --     },
+    --   },
+    --
+    --   completion = {
+    --     -- By default, you may press `<c-space>` to show the documentation.
+    --     -- Optionally, set `auto_show = true` to show the documentation after a delay.
+    --     documentation = { auto_show = false, auto_show_delay_ms = 500 },
+    --   },
+    --
+    --   sources = {
+    --     default = { 'lsp', 'path', 'snippets', 'lazydev', 'copilot' },
+    --     providers = {
+    --       lazydev = { module = 'lazydev.integrations.blink', score_offset = 100 },
+    --       copilot = {
+    --         name = 'copilot',
+    --         module = 'blink-cmp-copilot',
+    --         score_offset = 100,
+    --         async = true,
+    --       },
+    --     },
+    --   },
+    --
+    --   snippets = { preset = 'luasnip' },
+    --
+    --   -- Blink.cmp includes an optional, recommended rust fuzzy matcher,
+    --   -- which automatically downloads a prebuilt binary when enabled.
+    --   --
+    --   -- By default, we use the Lua implementation instead, but you may enable
+    --   -- the rust implementation via `'prefer_rust_with_warning'`
+    --   --
+    --   -- See :h blink-cmp-config-fuzzy for more information
+    --   fuzzy = { implementation = 'lua' },
+    --
+    --   -- Shows a signature help window while you type arguments for a function
+    --   signature = { enabled = true },
+    -- },
   },
 
   { -- Autoformat
@@ -195,5 +305,35 @@ return {
     config = function(_, opts)
       require('copilot').setup(opts)
     end,
+  },
+  {
+    'CopilotC-Nvim/CopilotChat.nvim',
+    dependencies = {
+      { 'github/copilot.vim' }, -- or zbirenbaum/copilot.lua
+      { 'nvim-lua/plenary.nvim', branch = 'master' }, -- for curl, log and async functions
+    },
+    build = 'make tiktoken', -- Only on MacOS or Linux
+    opts = function()
+      local user = vim.env.USER or 'User'
+      user = user:sub(1, 1):upper() .. user:sub(2)
+      return {
+        auto_insert_mode = true,
+        question_header = '  ' .. user .. ' ',
+        answer_header = '  Copilot ',
+        window = {
+          width = 0.4,
+        },
+      }
+    end,
+    keys = {
+      {
+        '<leader>ac',
+        function()
+          require('CopilotChat').toggle()
+        end,
+        desc = 'Toggle Copilot Chat',
+      },
+    },
+    -- See Commands section for default commands if you want to lazy load on them
   },
 }
