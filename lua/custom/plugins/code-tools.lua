@@ -62,6 +62,23 @@ return {
         --
         -- See :h blink-cmp-config-keymap for defining your own keymap
         preset = 'default',
+        ['<Tab>'] = {
+          -- first, try a LuaSnip expand or jump, but schedule it so it
+          -- doesn’t violate Blink’s “no buffer edits” rule
+          function(cmp)
+            local ls = require 'luasnip'
+            if ls.expand_or_jumpable() then
+              vim.schedule(function()
+                ls.expand_or_jump()
+              end)
+              return true
+            end
+          end,
+          -- next, if we’re already inside a snippet, jump to the next placeholder
+          'snippet_forward',
+          -- finally, fall back to Blink’s normal <Tab> (completion movement, indent, etc.)
+          'fallback',
+        },
 
         -- For more advanced Luasnip keymaps (e.g. selecting choice nodes, expansion) see:
         --    https://github.com/L3MON4D3/LuaSnip?tab=readme-ov-file#keymaps
