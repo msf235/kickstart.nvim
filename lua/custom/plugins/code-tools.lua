@@ -62,6 +62,23 @@ return {
         --
         -- See :h blink-cmp-config-keymap for defining your own keymap
         preset = 'default',
+        ['<Tab>'] = {
+          -- first, try a LuaSnip expand or jump, but schedule it so it
+          -- doesn’t violate Blink’s “no buffer edits” rule
+          function(cmp)
+            local ls = require 'luasnip'
+            if ls.expand_or_jumpable() then
+              vim.schedule(function()
+                ls.expand_or_jump()
+              end)
+              return true
+            end
+          end,
+          -- next, if we’re already inside a snippet, jump to the next placeholder
+          'snippet_forward',
+          -- finally, fall back to Blink’s normal <Tab> (completion movement, indent, etc.)
+          'fallback',
+        },
 
         -- For more advanced Luasnip keymaps (e.g. selecting choice nodes, expansion) see:
         --    https://github.com/L3MON4D3/LuaSnip?tab=readme-ov-file#keymaps
@@ -175,7 +192,8 @@ return {
       formatters_by_ft = {
         lua = { 'stylua' },
         -- Conform can also run multiple formatters sequentially
-        -- python = { "isort", "black" },
+        python = { 'isort', 'black' },
+        -- python = { 'black' },
         --
         -- You can use 'stop_after_first' to run the first available formatter from the list
         -- javascript = { "prettierd", "prettier", stop_after_first = true },
@@ -195,5 +213,67 @@ return {
     config = function(_, opts)
       require('copilot').setup(opts)
     end,
+  },
+  {
+    'CopilotC-Nvim/CopilotChat.nvim',
+    dependencies = {
+      { 'zbirenbaum/copilot.lua' }, -- or zbirenbaum/copilot.lua
+      { 'nvim-lua/plenary.nvim', branch = 'master' }, -- for curl, log and async functions
+    },
+    build = 'make tiktoken', -- Only on MacOS or Linux
+    opts = function()
+      local user = vim.env.USER or 'User'
+      user = user:sub(1, 1):upper() .. user:sub(2)
+      return {
+        auto_insert_mode = true,
+        question_header = '  ' .. user .. ' ',
+        answer_header = '  Copilot ',
+        window = {
+          width = 0.4,
+        },
+      }
+    end,
+    keys = {
+      { '<c-s>', '<CR>', ft = 'copilot-chat', desc = 'Submit Prompt', remap = true },
+      { '<leader>a', '', desc = '+ai', mode = { 'n', 'v' } },
+      {
+        '<leader>aa',
+        function()
+          return require('CopilotChat').toggle()
+        end,
+        desc = 'Toggle (CopilotChat)',
+        mode = { 'n', 'v' },
+      },
+      {
+        '<leader>ax',
+        function()
+          return require('CopilotChat').reset()
+        end,
+        desc = 'Clear (CopilotChat)',
+        mode = { 'n', 'v' },
+      },
+      {
+        '<leader>aq',
+        function()
+          vim.ui.input({
+            prompt = 'Quick Chat: ',
+          }, function(input)
+            if input ~= '' then
+              require('CopilotChat').ask(input)
+            end
+          end)
+        end,
+        desc = 'Quick Chat (CopilotChat)',
+        mode = { 'n', 'v' },
+      },
+      {
+        '<leader>ap',
+        function()
+          require('CopilotChat').select_prompt()
+        end,
+        desc = 'Prompt Actions (CopilotChat)',
+        mode = { 'n', 'v' },
+      },
+    },
   },
 }
