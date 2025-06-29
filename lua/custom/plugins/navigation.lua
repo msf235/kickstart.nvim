@@ -55,6 +55,7 @@ return {
 
       -- [[ Configure Telescope ]]
       -- See `:help telescope` and `:help telescope.setup()`
+      local actions = require 'telescope.actions'
       require('telescope').setup {
         -- You can put your default mappings / updates / etc. in here
         --  All the info you're looking for is in `:help telescope.setup()`
@@ -65,6 +66,25 @@ return {
         --   },
         -- },
         -- pickers = {}
+        defaults = {
+          mappings = {
+            i = {
+              ['<Del>'] = actions.delete_buffer,
+            },
+            n = {
+              ['<Del>'] = actions.delete_buffer,
+              ['dd'] = actions.delete_buffer,
+            },
+          },
+        },
+        -- pickers = {
+        --   buffers = {
+        --     -- sorter = require("telescope.sorters").fuzzy_with_index_bias(),
+        --     ignore_current_buffer = false,
+        --     show_all_buffers = true,
+        --     default_selection_index = current_index,
+        --   },
+        -- },
       }
 
       -- Enable Telescope extensions if they are installed
