@@ -56,6 +56,14 @@ return {
       -- [[ Configure Telescope ]]
       -- See `:help telescope` and `:help telescope.setup()`
       local actions = require 'telescope.actions'
+      local utils = require 'telescope.utils'
+
+      -- Custom display function: shows filename on left, path on right
+      local function filename_left_display(opts, path)
+        local tail = utils.path_tail(path)
+        local dir = path:sub(1, #path - #tail)
+        return string.format('%-30s %s', tail, dir)
+      end
       require('telescope').setup {
         -- You can put your default mappings / updates / etc. in here
         --  All the info you're looking for is in `:help telescope.setup()`
@@ -67,6 +75,8 @@ return {
         -- },
         -- pickers = {}
         defaults = {
+          path_display = filename_left_display,
+
           mappings = {
             i = {
               ['<Del>'] = actions.delete_buffer,
