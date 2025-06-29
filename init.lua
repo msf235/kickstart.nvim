@@ -430,5 +430,12 @@ vim.keymap.set('n', 'gb', ':GoToBreakpoint<CR>', { silent = true, desc = 'Go To 
 
 require('luasnip.loaders.from_vscode').lazy_load { paths = { './snippets' } }
 
+vim.api.nvim_create_autocmd('FileType', {
+  pattern = 'netrw',
+  callback = function()
+    vim.keymap.set('n', 'q', ':Rex<CR>', { buffer = true })
+  end,
+})
+
 -- The line beneath this is called `modeline`. See `:help modeline`
 -- vim: ts=2 sts=2 sw=2 et
