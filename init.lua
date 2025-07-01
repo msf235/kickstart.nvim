@@ -342,12 +342,91 @@ require('lazy').setup({
   --
   --  Uncomment the following line and add your plugins to `lua/custom/plugins/*.lua` to get going.
   { import = 'custom.plugins' },
-  {
-    'folke/persistence.nvim',
-    event = 'BufReadPre', -- this will only start session saving when an actual file was opened
-    opts = {
-      -- add any custom options here
-    },
+  -- {
+  --   'folke/persistence.nvim',
+  --   event = 'BufReadPre', -- this will only start session saving when an actual file was opened
+  --   opts = {
+  --     -- add any custom options here
+  --   },
+  -- },
+  { -- Collection of various small independent plugins/modules
+    'echasnovski/mini.nvim',
+    config = function()
+      -- Better Around/Inside textobjects
+      --
+      -- Examples:
+      --  - va)  - [V]isually select [A]round [)]paren
+      --  - yinq - [Y]ank [I]nside [N]ext [Q]uote
+      --  - ci'  - [C]hange [I]nside [']quote
+      require('mini.ai').setup { n_lines = 500 }
+      require('mini.sessions').setup {
+        -- Whether to read default session if Neovim opened without file arguments
+        autoread = false,
+
+        -- Whether to write currently read session before leaving it
+        autowrite = true,
+
+        -- Global sessions ('' disables)
+        directory = '',
+
+        -- File for local session (use `''` to disable)
+        file = '.session.vim',
+      }
+
+      -- Add/delete/replace surroundings (brackets, quotes, etc.)
+      --
+      -- - saiw) - [S]urround [A]dd [I]nner [W]ord [)]Paren
+      -- - sd'   - [S]urround [D]elete [']quotes
+      -- - sr)'  - [S]urround [R]eplace [)] [']
+      require('mini.surround').setup()
+
+      -- Simple and easy statusline.
+      --  You could remove this setup call if you don't like it,
+      --  and try some other statusline plugin
+      local statusline = require 'mini.statusline'
+      -- set use_icons to true if you have a Nerd Font
+      statusline.setup {
+        use_icons = vim.g.have_nerd_font,
+        content = {
+          active = function()
+            local mode, mode_hl = MiniStatusline.section_mode { trunc_width = 120 }
+            local git = MiniStatusline.section_git { trunc_width = 40 }
+            local diff = MiniStatusline.section_diff { trunc_width = 75 }
+            local diagnostics = MiniStatusline.section_diagnostics { trunc_width = 75 }
+            local lsp = MiniStatusline.section_lsp { trunc_width = 75 }
+            local filename = MiniStatusline.section_filename { trunc_width = 140 }
+            local fileinfo = MiniStatusline.section_fileinfo { trunc_width = 120 }
+            local location = MiniStatusline.section_location { trunc_width = 75 }
+            local search = MiniStatusline.section_searchcount { trunc_width = 75 }
+
+            return MiniStatusline.combine_groups {
+              { hl = mode_hl, strings = { mode } },
+              { hl = 'MiniStatuslineDevinfo', strings = { git, diff, diagnostics, lsp } },
+              '%<',
+              { hl = 'MiniStatuslineFilename', strings = { filename } },
+              '%=',
+              { hl = 'MiniStatuslineFileinfo', strings = { fileinfo } },
+              { hl = mode_hl, strings = { search, location } },
+            }
+          end,
+          inactive = function()
+            -- Use same content as active
+            return MiniStatusline.config.content.active()
+          end,
+        },
+      }
+
+      -- You can configure sections in the statusline by overriding their
+      -- default behavior. For example, here we set the section for
+      -- cursor location to LINE:COLUMN
+      ---@diagnostic disable-next-line: duplicate-set-field
+      statusline.section_location = function()
+        return '%2l:%-2v'
+      end
+
+      -- ... and there is more!
+      --  Check out: https://github.com/echasnovski/mini.nvim
+    end,
   },
   --
   -- For additional information with loading, sourcing and examples see `:help lazy.nvim-🔌-plugin-spec`
@@ -436,6 +515,29 @@ vim.api.nvim_create_autocmd('FileType', {
     vim.keymap.set('n', 'q', ':Rex<CR>', { buffer = true })
   end,
 })
+
+-- Auto-read local session on startup if no files are specified
+local minisessions = require 'mini.sessions'
+if vim.fn.argc() == 0 and vim.fn.empty(vim.v.this_session) == 1 then
+  vim.schedule(function()
+    local local_session = minisessions.detected['.session.vim']
+
+    if local_session and local_session.type == 'local' then
+      -- Local session exists, so read it
+      minisessions.read '.session.vim'
+    else
+      -- No session file, so create and activate it
+      minisessions.write '.session.vim'
+    end
+  end)
+end
+
+vim.cmd [[
+  highlight TreesitterContext guibg=#e3e3dd guifg=#073642
+  highlight TreesitterContextLineNumber guifg=#586e75
+  highlight TreesitterContextBottom gui=underline guisp=#93a1a1
+  highlight TreesitterContextLineNumberBottom gui=underline guisp=#93a1a1
+]]
 
 -- The line beneath this is called `modeline`. See `:help modeline`
 -- vim: ts=2 sts=2 sw=2 et
