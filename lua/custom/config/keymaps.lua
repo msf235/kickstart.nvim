@@ -10,3 +10,7 @@ end, { desc = 'Restore session' })
 
 vim.keymap.set('n', '<C-s>', ':w<CR>', { noremap = true, desc = 'Write file' })
 vim.keymap.set('i', '<C-s>', '<Esc>:w<CR>', { noremap = true, desc = 'Write file' })
+
+-- Use vim.comment (built-in from Neovim 0.10+)
+vim.keymap.set('n', '<C-/>', 'gcc', { remap = true, desc = 'Toggle comment (line)' })
+vim.keymap.set('x', '<C-/>', 'gc', { remap = true, desc = 'Toggle comment (visual)' })
