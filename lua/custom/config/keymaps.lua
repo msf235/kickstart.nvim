@@ -16,6 +16,7 @@ vim.keymap.set('i', '<C-s>', '<Esc>:w<CR>', { noremap = true, desc = 'Write file
 
 -- Use vim.comment (built-in from Neovim 0.10+)
 vim.keymap.set('n', '<C-/>', 'gcc', { remap = true, desc = 'Toggle comment (line)' })
+vim.keymap.set('n', '<C-_>', 'gcc', { remap = true, desc = 'Toggle comment (line)' })
 vim.keymap.set('x', '<C-/>', 'gc', { remap = true, desc = 'Toggle comment (visual)' })
 
 -- vim.keymap.set('n', '[c', function()
