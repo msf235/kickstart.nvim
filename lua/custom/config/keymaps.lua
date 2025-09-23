@@ -1,3 +1,5 @@
+vim.keymap.set('n', 'Y', '"+yy', { desc = 'Copy line to system clipboard' })
+
 vim.keymap.set('n', '-', '<CMD>Oil<CR>', { desc = 'Open parent directory' })
 
 -- vim.keymap.set('n', '<leader>e', ':Ex<CR>', { noremap = true, desc = 'Open file explorer' })
