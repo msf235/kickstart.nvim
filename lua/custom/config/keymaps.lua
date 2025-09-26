@@ -1,4 +1,5 @@
 vim.keymap.set('n', 'Y', '"+yy', { desc = 'Copy line to system clipboard' })
+vim.keymap.set('v', 'Y', '"+y', { desc = 'Copy selected to system clipboard' })
 
 vim.keymap.set('n', '-', '<CMD>Oil<CR>', { desc = 'Open parent directory' })
 
