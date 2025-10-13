@@ -160,6 +160,11 @@ return {
               vim.lsp.inlay_hint.enable(not vim.lsp.inlay_hint.is_enabled { bufnr = event.buf })
             end, '[T]oggle Inlay [H]ints')
           end
+          -- Disable texlab formatting since this is being handled by conform
+          if client and client.name == 'texlab' then
+            client.server_capabilities.documentFormattingProvider = false
+            client.server_capabilities.documentRangeFormattingProvider = false
+          end
         end,
       })
 
@@ -232,6 +237,18 @@ return {
               },
               -- You can toggle below to ignore Lua_LS's noisy `missing-fields` warnings
               -- diagnostics = { disable = { 'missing-fields' } },
+            },
+          },
+        },
+        texlab = {
+          settings = {
+            texlab = {
+              latexFormatter = 'latexindent',
+              formatterLineLength = 80,
+              latexindent = {
+                modifyLineBreaks = true, -- passes -m behavior
+                ['local'] = '.latexindent.yaml', -- <— quote this key
+              },
             },
           },
         },

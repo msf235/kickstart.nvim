@@ -175,29 +175,38 @@ return {
     },
     opts = {
       notify_on_error = false,
+
+      -- Keep your function-based format_on_save, but make TeX NOT fall back to LSP.
       format_on_save = function(bufnr)
-        -- Disable "format_on_save lsp_fallback" for languages that don't
-        -- have a well standardized coding style. You can add additional
-        -- languages here or re-enable it for the disabled ones.
+        local ft = vim.bo[bufnr].filetype
         local disable_filetypes = { c = true, cpp = true }
-        if disable_filetypes[vim.bo[bufnr].filetype] then
+        if disable_filetypes[ft] then
           return nil
-        else
-          return {
-            timeout_ms = 5000,
-            lsp_format = 'fallback',
-          }
         end
+        -- For TeX, we want only the external tool (latexindent), no LSP fallback.
+        if ft == 'tex' or ft == 'plaintex' then
+          return { timeout_ms = 5000, lsp_format = false }
+        end
+        -- Everything else can still fall back to LSP if no external formatter exists.
+        return { timeout_ms = 5000, lsp_format = 'fallback' }
       end,
+
       formatters_by_ft = {
         lua = { 'stylua' },
-        -- Conform can also run multiple formatters sequentially
         python = { 'isort', 'black' },
         tex = { 'latexindent' },
         plaintex = { 'latexindent' },
-        --
-        -- You can use 'stop_after_first' to run the first available formatter from the list
-        -- javascript = { "prettierd", "prettier", stop_after_first = true },
+      },
+
+      -- Configure latexindent with flags that enforce hard-wrap
+      formatters = {
+        latexindent = {
+          -- Read TeX from STDIN and write formatted TeX to STDOUT
+          -- -m = modify line breaks (hard-wrap)
+          -- -l <file> = use project-local yaml
+          args = { '-m', '-l', '.latexindent.yaml', '-' },
+          stdin = true,
+        },
       },
     },
   },
@@ -276,5 +285,14 @@ return {
         mode = { 'n', 'v' },
       },
     },
+  },
+  {
+    'lervag/vimtex',
+    lazy = false, -- we don't want to lazy load VimTeX
+    -- tag = "v2.15", -- uncomment to pin to a specific release
+    init = function()
+      -- VimTeX configuration goes here, e.g.
+      vim.g.vimtex_view_method = 'zathura'
+    end,
   },
 }
