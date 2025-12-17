@@ -159,16 +159,9 @@ function _G.__jump_to_context_edge(to_end)
   vim.api.nvim_win_set_cursor(0, { target_row + 1, target_col })
 end
 
-vim.keymap.set('n', '[[', function()
-  _G.__jump_to_context_edge(false)
-end, { desc = 'Jump to start of current context', silent = true })
-
-vim.keymap.set('n', ']]', function()
-  _G.__jump_to_context_edge(true)
-end, { desc = 'Jump to end of current context', silent = true })
-
--- Override any ftplugin-provided [[/]] mappings (e.g., python.vim) with our context jumps.
+-- Override ftplugin-provided [[/]] (e.g., python.vim) with Treesitter context jumps.
 vim.api.nvim_create_autocmd('FileType', {
+  pattern = '*',
   callback = function(args)
     vim.keymap.set('n', '[[', function()
       _G.__jump_to_context_edge(false)

@@ -238,4 +238,74 @@ return {
       },
     },
   },
+  {
+    'sindrets/diffview.nvim',
+    dependencies = { 'nvim-lua/plenary.nvim' },
+    cmd = {
+      'DiffviewOpen',
+      'DiffviewClose',
+      'DiffviewToggleFiles',
+      'DiffviewFocusFiles',
+      'DiffviewFileHistory',
+      'DiffviewRefresh',
+    },
+    keys = {
+      -- Review current branch vs master (change to main if needed)
+      { '<leader>dv', '<cmd>DiffviewOpen master...HEAD<cr>', desc = 'Diffview: master...HEAD' },
+      -- Review working tree changes (unstaged/staged)
+      { '<leader>dV', '<cmd>DiffviewOpen<cr>', desc = 'Diffview: working tree' },
+      -- File history (current file)
+      { '<leader>dh', '<cmd>DiffviewFileHistory %<cr>', desc = 'Diffview: file history' },
+      -- Repo history
+      { '<leader>dH', '<cmd>DiffviewFileHistory<cr>', desc = 'Diffview: repo history' },
+      -- Close
+      { '<leader>dq', '<cmd>DiffviewClose<cr>', desc = 'Diffview: close' },
+    },
+    opts = function()
+      -- Small helper for better default keymaps inside the Diffview buffers
+      local actions = require 'diffview.actions'
+
+      return {
+        enhanced_diff_hl = true, -- nicer highlights for diffs
+        view = {
+          merge_tool = {
+            layout = 'diff3_mixed',
+            disable_diagnostics = true,
+          },
+        },
+        file_panel = {
+          listing_style = 'tree', -- "list" is also fine
+          win_config = {
+            position = 'left',
+            width = 38,
+          },
+        },
+        keymaps = {
+          -- These are buffer-local within Diffview views/panels
+          view = {
+            ['q'] = '<cmd>DiffviewClose<cr>',
+            ['<leader>e'] = actions.focus_files, -- jump focus to file panel
+            ['<leader>t'] = actions.toggle_files, -- toggle file panel
+            ['<leader>r'] = '<cmd>DiffviewRefresh<cr>',
+            ['o'] = actions.goto_file_split,
+            ['<cr>'] = actions.goto_file_split,
+          },
+          file_panel = {
+            ['q'] = '<cmd>DiffviewClose<cr>',
+            ['<cr>'] = actions.select_entry, -- open diff for file
+            ['o'] = actions.select_entry,
+            ['-'] = actions.toggle_stage_entry, -- stage/unstage file (optional, but handy)
+            ['S'] = actions.stage_all, -- stage all (optional)
+            ['U'] = actions.unstage_all, -- unstage all (optional)
+            ['R'] = '<cmd>DiffviewRefresh<cr>',
+          },
+          file_history_panel = {
+            ['q'] = '<cmd>DiffviewClose<cr>',
+            ['<cr>'] = actions.select_entry,
+            ['o'] = actions.select_entry,
+          },
+        },
+      }
+    end,
+  },
 }
