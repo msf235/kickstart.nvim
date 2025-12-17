@@ -196,6 +196,8 @@ return {
         python = { 'isort', 'black' },
         tex = { 'latexindent' },
         plaintex = { 'latexindent' },
+        text = { 'par_textwrap' },
+        markdown = { 'par_textwrap' },
       },
 
       -- Configure latexindent with flags that enforce hard-wrap
@@ -205,6 +207,11 @@ return {
           -- -m = modify line breaks (hard-wrap)
           -- -l <file> = use project-local yaml
           args = { '-m', '-l', '.latexindent.yaml', '-' },
+          stdin = true,
+        },
+        par_textwrap = {
+          command = 'par',
+          args = { 'w80' }, -- wrap to 80 cols; change if you prefer
           stdin = true,
         },
       },
@@ -227,25 +234,42 @@ return {
   {
     'CopilotC-Nvim/CopilotChat.nvim',
     dependencies = {
-      { 'zbirenbaum/copilot.lua' }, -- or zbirenbaum/copilot.lua
-      { 'nvim-lua/plenary.nvim', branch = 'master' }, -- for curl, log and async functions
+      { 'zbirenbaum/copilot.lua' },
+      { 'nvim-lua/plenary.nvim', branch = 'master' },
     },
-    build = 'make tiktoken', -- Only on MacOS or Linux
+    build = 'make tiktoken',
     opts = function()
       local user = vim.env.USER or 'User'
       user = user:sub(1, 1):upper() .. user:sub(2)
+
+      -- ADDED: prefer visual selection, fall back to buffer
+      local sel = require 'CopilotChat.select'
+
       return {
         auto_insert_mode = true,
         question_header = '  ' .. user .. ' ',
         answer_header = '  Copilot ',
-        window = {
-          width = 0.4,
+        window = { width = 0.4 },
+
+        -- ADDED: set a default selection strategy for *everything*
+        selection = function(source)
+          return sel.visual(source) or sel.buffer(source)
+        end,
+
+        -- ADDED (optional): an example custom prompt that *always* uses visual
+        prompts = {
+          ExplainSelection = {
+            prompt = 'Explain the selected code in detail:',
+            description = 'Explain what the current visual selection does',
+            selection = sel.visual,
+          },
         },
       }
     end,
     keys = {
       { '<c-s>', '<CR>', ft = 'copilot-chat', desc = 'Submit Prompt', remap = true },
       { '<leader>a', '', desc = '+ai', mode = { 'n', 'v' } },
+
       {
         '<leader>aa',
         function()
@@ -262,30 +286,39 @@ return {
         desc = 'Clear (CopilotChat)',
         mode = { 'n', 'v' },
       },
+
+      -- UPDATED: Quick Chat — capture visual selection automatically
       {
         '<leader>aq',
         function()
-          vim.ui.input({
-            prompt = 'Quick Chat: ',
-          }, function(input)
-            if input ~= '' then
-              require('CopilotChat').ask(input)
+          vim.ui.input({ prompt = 'Quick Chat: ' }, function(input)
+            if input and input ~= '' then
+              require('CopilotChat').ask(input, {
+                -- use visual selection when available; fallback handled by opts.selection
+                selection = require('CopilotChat.select').visual,
+              })
             end
           end)
         end,
         desc = 'Quick Chat (CopilotChat)',
         mode = { 'n', 'v' },
       },
+
+      -- UPDATED: Prompt picker that evaluates with visual selection
       {
         '<leader>ap',
         function()
-          require('CopilotChat').select_prompt()
+          local actions = require 'CopilotChat.actions'
+          actions.pick(actions.prompt_actions {
+            selection = require('CopilotChat.select').visual,
+          })
         end,
         desc = 'Prompt Actions (CopilotChat)',
         mode = { 'n', 'v' },
       },
     },
   },
+
   {
     'lervag/vimtex',
     lazy = false, -- we don't want to lazy load VimTeX
