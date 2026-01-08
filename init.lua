@@ -509,6 +509,10 @@ vim.api.nvim_create_user_command('GoToError', go_to_error, {})
 
 vim.keymap.set('n', 'gb', ':GoToBreakpoint<CR>', { silent = true, desc = 'Go To Breakpoint' })
 
+-- Set descriptions for which-key
+vim.keymap.set('n', '<leader>d', '', { desc = '+diff / git' })
+vim.keymap.set('n', '<leader>s', '', { desc = 'search' })
+
 require('luasnip.loaders.from_vscode').lazy_load { paths = { './snippets' } }
 
 vim.api.nvim_create_autocmd('FileType', {

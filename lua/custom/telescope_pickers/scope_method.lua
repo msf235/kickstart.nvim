@@ -66,7 +66,7 @@ local function collect_symbols(bufnr, filepath)
   return result
 end
 
-function M.scoped_method_and_class_telescope()
+function M.open()
   local bufnr = vim.api.nvim_get_current_buf()
   local filepath = vim.api.nvim_buf_get_name(bufnr)
   if filepath == '' then
