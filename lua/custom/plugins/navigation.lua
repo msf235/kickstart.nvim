@@ -261,20 +261,6 @@ return {
       'DiffviewFileHistory',
       'DiffviewRefresh',
     },
-    init = function()
-      local ok, wk = pcall(require, 'which-key')
-      if not ok then
-        return
-      end
-      wk.add({
-        { '<leader>d', group = '[D]iffview' },
-        { '<leader>dv', desc = 'Diffview: master...HEAD' },
-        { '<leader>dV', desc = 'Diffview: working tree' },
-        { '<leader>dh', desc = 'Diffview: file history' },
-        { '<leader>dH', desc = 'Diffview: repo history' },
-        { '<leader>dq', desc = 'Diffview: close' },
-      }, { mode = 'n' })
-    end,
     keys = {
       -- Review current branch vs master (change to main if needed)
       { '<leader>dv', '<cmd>DiffviewOpen master...HEAD<cr>', desc = 'Diffview: master...HEAD' },
