@@ -48,9 +48,11 @@ end
 local function file_commits(root, relpath)
   local args = {
     'log',
+    '--all',
     '--follow',
     '--date=short',
-    '--pretty=format:%H%x09%h%x09%ad%x09%s',
+    '--decorate=short',
+    '--pretty=format:%H%x09%h%x09%ad%x09%d%x09%s',
     '--',
     relpath,
   }
@@ -61,7 +63,7 @@ local function file_commits(root, relpath)
 
   local commits = {}
   for _, line in ipairs(r.stdout) do
-    local full, short, date, subject = line:match '([^\t]+)\t([^\t]+)\t([^\t]+)\t(.+)'
+    local full, short, date, deco, subject = line:match '([^\t]+)\t([^\t]+)\t([^\t]+)\t([^\t]*)\t(.+)'
     if full and short and date and subject then
       table.insert(commits, {
         full = full,
@@ -159,9 +161,9 @@ function M.open()
         entry_maker = function(c)
           return {
             value = c,
-            display = ('%s  %s  %s'):format(c.short, c.date, c.subject),
-            -- makes searching by commit hash work well
-            ordinal = table.concat({ c.full, c.short, c.date, c.subject }, ' '),
+            display = ('%s  %s  %s  %s'):format(c.short, c.date, (c.deco ~= '' and c.deco or ' '), c.subject),
+            -- -- makes searching by commit hash work well
+            ordinal = table.concat({ c.full, c.short, c.date, c.deco or '', c.subject }, ' '),
           }
         end,
       },
