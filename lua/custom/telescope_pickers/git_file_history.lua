@@ -69,6 +69,7 @@ local function file_commits(root, relpath)
         full = full,
         short = short,
         date = date,
+        deco = deco,
         subject = subject,
       })
     end
@@ -159,11 +160,12 @@ function M.open()
       finder = finders.new_table {
         results = commits,
         entry_maker = function(c)
+          local deco = (c.deco and c.deco ~= '') and c.deco or ''
           return {
             value = c,
-            display = ('%s  %s  %s  %s'):format(c.short, c.date, (c.deco ~= '' and c.deco or ' '), c.subject),
+            display = ('%s  %s  %s  %s'):format(c.short, c.date, deco, c.subject),
             -- -- makes searching by commit hash work well
-            ordinal = table.concat({ c.full, c.short, c.date, c.deco or '', c.subject }, ' '),
+            ordinal = table.concat({ c.full, c.short, c.date, deco, c.subject }, ' '),
           }
         end,
       },
