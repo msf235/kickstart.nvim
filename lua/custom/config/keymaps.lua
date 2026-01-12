@@ -1,5 +1,15 @@
-vim.keymap.set('n', 'Y', '"+yy', { desc = 'Copy line to system clipboard' })
-vim.keymap.set('v', 'Y', '"+y', { desc = 'Copy selected to system clipboard' })
+vim.g.clipboard = {
+  name = 'system+tmux+file',
+  copy = {
+    ['+'] = { 'nvim-yank-plus' },
+  },
+  paste = {
+    ['+'] = { 'tmux', 'save-buffer', '-' },
+  },
+  cache_enabled = false,
+}
+vim.keymap.set('n', 'Y', '"+yy', { desc = 'Copy line to + register', noremap = true, silent = true })
+vim.keymap.set('v', 'Y', '"+y', { desc = 'Copy selection to + register', noremap = true, silent = true })
 
 vim.keymap.set('n', '-', '<CMD>Oil<CR>', { desc = 'Open parent directory' })
 
