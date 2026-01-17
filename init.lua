@@ -512,6 +512,7 @@ vim.keymap.set('n', 'gb', ':GoToBreakpoint<CR>', { silent = true, desc = 'Go To 
 -- Set descriptions for which-key
 vim.keymap.set('n', '<leader>d', '', { desc = '+diff / git' })
 vim.keymap.set('n', '<leader>s', '', { desc = 'search' })
+vim.keymap.set('n', '<leader>u', '', { desc = 'ui' })
 
 require('luasnip.loaders.from_vscode').lazy_load { paths = { './snippets' } }
 
