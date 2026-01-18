@@ -1,3 +1,6 @@
+-- lua/custom/config/keymaps.lua
+
+-- Clipboard integration
 vim.g.clipboard = {
   name = 'system+tmux+file',
   copy = {
@@ -8,42 +11,46 @@ vim.g.clipboard = {
   },
   cache_enabled = false,
 }
+
+-- Yank to system clipboard
 vim.keymap.set('n', 'Y', '"+yy', { desc = 'Copy line to + register', noremap = true, silent = true })
 vim.keymap.set('v', 'Y', '"+y', { desc = 'Copy selection to + register', noremap = true, silent = true })
 
+-- File browser
 vim.keymap.set('n', '-', '<CMD>Oil<CR>', { desc = 'Open parent directory' })
-
--- vim.keymap.set('n', '<leader>e', ':Ex<CR>', { noremap = true, desc = 'Open file explorer' })
 vim.keymap.set('n', '<leader>e', function()
   MiniFiles.open()
 end, { desc = 'Open mini.files' })
 
+-- Lazy.nvim
 vim.keymap.set('n', '<leader>L', ':Lazy<CR>', { noremap = true, desc = 'Open lazy.nvim' })
 
+-- Session restore
 vim.keymap.set('n', '<leader>qs', function()
   require('persistence').load()
 end, { desc = 'Restore session' })
 
+-- Save
 vim.keymap.set('n', '<C-s>', ':w<CR>', { noremap = true, desc = 'Write file' })
 vim.keymap.set('i', '<C-s>', '<Esc>:w<CR>', { noremap = true, desc = 'Write file' })
 
--- Use vim.comment (built-in from Neovim 0.10+)
+-- Comments (Neovim 0.10+ comment mappings)
 vim.keymap.set('n', '<C-/>', 'gcc', { remap = true, desc = 'Toggle comment (line)' })
 vim.keymap.set('n', '<C-_>', 'gcc', { remap = true, desc = 'Toggle comment (line)' })
 vim.keymap.set('x', '<C-/>', 'gc', { remap = true, desc = 'Toggle comment (visual)' })
 
--- vim.keymap.set('n', '[c', function()
---   require('treesitter-context').go_to_context(vim.v.count1)
--- end, { silent = true, desc = 'Go up scope level' })
+--------------------------------------------------------------------------------
+-- Treesitter scope jumps ([c and ]c)
+--------------------------------------------------------------------------------
 
--- Jump to top of current scope
-vim.keymap.set('n', '[c', function()
+local function jump_scope_start()
   local ts_utils = require 'nvim-treesitter.ts_utils'
   local node = ts_utils.get_node_at_cursor()
   if not node then
     vim.notify('No Treesitter node under cursor', vim.log.levels.WARN)
     return
   end
+
   while node do
     local type = node:type()
     if
@@ -56,23 +63,24 @@ vim.keymap.set('n', '[c', function()
       or type == 'class_definition'
       or type == 'do_statement'
     then
-      local start_row, _, _ = node:start()
+      local start_row = node:start()
       vim.api.nvim_win_set_cursor(0, { start_row + 1, 0 })
       return
     end
     node = node:parent()
   end
-  vim.notify('No enclosing scope found', vim.log.levels.INFO)
-end, { desc = 'Jump to start of current scope', silent = true })
 
--- Jump to end of current scope
-vim.keymap.set('n', ']c', function()
+  vim.notify('No enclosing scope found', vim.log.levels.INFO)
+end
+
+local function jump_scope_end()
   local ts_utils = require 'nvim-treesitter.ts_utils'
   local node = ts_utils.get_node_at_cursor()
   if not node then
     vim.notify('No Treesitter node under cursor', vim.log.levels.WARN)
     return
   end
+
   while node do
     local type = node:type()
     if
@@ -85,17 +93,66 @@ vim.keymap.set('n', ']c', function()
       or type == 'class_definition'
       or type == 'do_statement'
     then
-      local end_row, _, _ = node:end_()
+      local end_row = node:end_()
       vim.api.nvim_win_set_cursor(0, { end_row + 1, 0 })
       return
     end
     node = node:parent()
   end
-  vim.notify('No enclosing scope found', vim.log.levels.INFO)
-end, { desc = 'Jump to end of current scope', silent = true })
 
--- Jump to the start/end of the current "context" (scope defined by Treesitter locals)
-function _G.__jump_to_context_edge(to_end)
+  vim.notify('No enclosing scope found', vim.log.levels.INFO)
+end
+
+-- Normal mode mappings
+vim.keymap.set('n', '[c', jump_scope_start, { desc = 'Jump to start of current scope', silent = true })
+vim.keymap.set('n', ']c', jump_scope_end, { desc = 'Jump to end of current scope', silent = true })
+
+-- Visual-mode helper: extend selection to new cursor position after a jump.
+local function visual_extend_after_jump(jump_fn)
+  return function()
+    -- Anchor where Visual mode started (mark "v")
+    local anchor = vim.fn.getpos 'v'
+
+    -- Perform the jump (moves the cursor)
+    jump_fn()
+
+    -- Current cursor becomes the other end
+    local new_end = vim.fn.getpos '.'
+
+    local function before(a, b)
+      if a[2] ~= b[2] then
+        return a[2] < b[2]
+      end
+      return a[3] < b[3]
+    end
+
+    local lo, hi = anchor, new_end
+    if before(new_end, anchor) then
+      lo, hi = new_end, anchor
+    end
+
+    -- Update visual selection bounds then reselect
+    vim.fn.setpos("'<", lo)
+    vim.fn.setpos("'>", hi)
+    vim.cmd 'normal! gv'
+  end
+end
+
+-- Visual/select mode: extend selection to scope edge
+vim.keymap.set('x', '[c', visual_extend_after_jump(jump_scope_start), {
+  desc = 'Extend selection to start of current scope',
+  silent = true,
+})
+vim.keymap.set('x', ']c', visual_extend_after_jump(jump_scope_end), {
+  desc = 'Extend selection to end of current scope',
+  silent = true,
+})
+
+--------------------------------------------------------------------------------
+-- Treesitter "context" jumps ([[ and ]]) using nvim-treesitter.locals
+--------------------------------------------------------------------------------
+
+local function jump_to_context_edge(to_end)
   local ts_utils = require 'nvim-treesitter.ts_utils'
   local ts_locals = require 'nvim-treesitter.locals'
 
@@ -121,7 +178,8 @@ function _G.__jump_to_context_edge(to_end)
     end
 
     local start_row = scope:start()
-    -- If we're sitting on the declaration line of the current scope, prefer the parent.
+
+    -- If we're on the declaration line of the current scope, sometimes prefer the parent.
     if cursor_row == start_row and idx < #scopes then
       local parent = scope:parent()
       if parent then
@@ -130,14 +188,13 @@ function _G.__jump_to_context_edge(to_end)
         local parent_is_classlike = parent_type and (parent_type:find 'class' or parent_type:find 'struct')
         local scope_is_function = scope_type and (scope_type:find 'function' or scope_type:find 'method')
 
-        -- If we're on a method/function header and the parent is class-like, jump to the parent.
         if parent_is_classlike and scope_is_function then
           return pick_scope(idx + 1)
         end
       end
     end
 
-    -- Avoid choosing the absolute root if there's a more meaningful parent.
+    -- Avoid absolute root if there's a more meaningful parent.
     if not scope:parent() and idx < #scopes then
       return pick_scope(idx + 1)
     end
@@ -154,11 +211,12 @@ function _G.__jump_to_context_edge(to_end)
   local target_row, target_col
   if to_end then
     target_row, target_col = scope:end_()
-    -- Treesitter end positions are exclusive, so if we land at col 0 of the next
-    -- line (common in Python), back up to the previous line.
+
+    -- TS end positions are exclusive; if we land at col 0 of next line, back up.
     if target_col == 0 and target_row > 0 then
       target_row = target_row - 1
-      target_col = #vim.api.nvim_buf_get_lines(bufnr, target_row, target_row + 1, false)[1]
+      local line = vim.api.nvim_buf_get_lines(bufnr, target_row, target_row + 1, false)[1] or ''
+      target_col = #line
     end
   else
     target_row, target_col = scope:start()
@@ -173,12 +231,32 @@ end
 vim.api.nvim_create_autocmd('FileType', {
   pattern = '*',
   callback = function(args)
+    -- Normal mode
     vim.keymap.set('n', '[[', function()
-      _G.__jump_to_context_edge(false)
+      jump_to_context_edge(false)
     end, { buffer = args.buf, desc = 'Jump to start of current context', silent = true })
 
     vim.keymap.set('n', ']]', function()
-      _G.__jump_to_context_edge(true)
+      jump_to_context_edge(true)
     end, { buffer = args.buf, desc = 'Jump to end of current context', silent = true })
+
+    -- Visual/select mode: extend selection
+    vim.keymap.set(
+      'x',
+      '[[',
+      visual_extend_after_jump(function()
+        jump_to_context_edge(false)
+      end),
+      { buffer = args.buf, desc = 'Extend selection to start of current context', silent = true }
+    )
+
+    vim.keymap.set(
+      'x',
+      ']]',
+      visual_extend_after_jump(function()
+        jump_to_context_edge(true)
+      end),
+      { buffer = args.buf, desc = 'Extend selection to end of current context', silent = true }
+    )
   end,
 })
