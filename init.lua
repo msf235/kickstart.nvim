@@ -522,6 +522,23 @@ vim.api.nvim_create_autocmd('FileType', {
   end,
 })
 
+vim.api.nvim_create_autocmd('FileType', {
+  pattern = 'copilot-chat',
+  callback = function(ev)
+    local function imap(lhs, wincmd)
+      vim.keymap.set('i', lhs, '<C-\\><C-n><C-w>' .. wincmd .. 'a', {
+        buffer = ev.buf,
+        noremap = true,
+        silent = true,
+      })
+    end
+    imap('<C-h>', '<C-h>')
+    imap('<C-j>', '<C-j>')
+    imap('<C-k>', '<C-k>')
+    imap('<C-l>', '<C-l>')
+  end,
+})
+
 -- Auto-read local session on startup if no files are specified
 local minisessions = require 'mini.sessions'
 if vim.fn.argc() == 0 and vim.fn.empty(vim.v.this_session) == 1 then
