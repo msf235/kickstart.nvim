@@ -540,6 +540,20 @@ vim.api.nvim_create_autocmd('FileType', {
   end,
 })
 
+-- Terminal-mode split navigation (works in opencode's embedded terminal, and any :terminal)
+local function tmap(lhs, wincmd, desc)
+  vim.keymap.set('t', lhs, [[<C-\><C-n><C-w>]] .. wincmd, {
+    noremap = true,
+    silent = true,
+    desc = desc,
+  })
+end
+
+tmap('<C-h>', 'h', 'Move focus to the left window (terminal)')
+tmap('<C-j>', 'j', 'Move focus to the lower window (terminal)')
+tmap('<C-k>', 'k', 'Move focus to the upper window (terminal)')
+tmap('<C-l>', 'l', 'Move focus to the right window (terminal)')
+
 -- Auto-read local session on startup if no files are specified
 local minisessions = require 'mini.sessions'
 if vim.fn.argc() == 0 and vim.fn.empty(vim.v.this_session) == 1 then
