@@ -228,6 +228,14 @@ vim.api.nvim_create_autocmd('TextYankPost', {
   end,
 })
 
+-- vim.api.nvim_echo({ { 'INIT.LUA: early echo test', 'WarningMsg' } }, true, {})
+
+-- pcall(require, 'trace_clangd')
+
+-- pcall(require, 'trace_require_lspconfig.lua')
+
+-- pcall(require, 'trace_vim_lsp_enable')
+
 -- [[ Install `lazy.nvim` plugin manager ]]
 --    See `:help lazy.nvim.txt` or https://github.com/folke/lazy.nvim for more info
 local lazypath = vim.fn.stdpath 'data' .. '/lazy/lazy.nvim'
@@ -576,6 +584,116 @@ vim.cmd [[
   highlight TreesitterContextBottom gui=underline guisp=#93a1a1
   highlight TreesitterContextLineNumberBottom gui=underline guisp=#93a1a1
 ]]
+
+-- local capabilities = vim.lsp.protocol.make_client_capabilities()
+-- local ok_cmp, cmp_lsp = pcall(require, 'cmp_nvim_lsp')
+-- if ok_cmp then
+--   capabilities = cmp_lsp.default_capabilities(capabilities)
+-- end
+--
+-- -- -------------------------
+-- -- clangd in podman container
+-- -- -------------------------
+--
+-- local function podman_clangd_cmd(root)
+--   return {
+--     'podman',
+--     'exec',
+--     '-i',
+--     '-w',
+--     root,
+--     CONTAINER,
+--     'clangd',
+--     '--compile-commands-dir=' .. (root .. '/build'),
+--     '--background-index',
+--     '--clang-tidy',
+--     '--completion-style=detailed',
+--     '--header-insertion=iwyu',
+--     '--log=error',
+--   }
+-- end
+--
+-- servers.clangd = {
+--   -- Set cmd at setup time; lspconfig will re-evaluate root_dir per project anyway.
+--   cmd = podman_clangd_cmd(vim.loop.cwd()),
+--   root_dir = require('lspconfig.util').root_pattern('.git', 'compile_commands.json', 'CMakeLists.txt'),
+--   single_file_support = true,
+--   on_new_config = function(new_config, new_root)
+--     new_config.cmd = podman_clangd_cmd(new_root)
+--   end,
+-- }
+
+vim.g.mapleader = ' '
+vim.g.maplocalleader = ' '
+
+-- clangd: use container if $CLANGD_IMAGE is set, otherwise use host clangd
+-- Assumes Neovim 0.11+.
+
+local ROOT_MARKERS = {
+  '.clangd',
+  '.clang-tidy',
+  '.clang-format',
+  'compile_commands.json',
+  'compile_flags.txt',
+  'configure.ac',
+  '.git',
+}
+
+local function root_dir(bufnr)
+  return vim.fs.root(bufnr, ROOT_MARKERS) or vim.uv.cwd()
+end
+
+local function container_cmd(root)
+  local image = vim.env.CLANGD_IMAGE
+  local runtime = vim.env.CLANGD_RUNTIME or 'podman'
+
+  return {
+    runtime,
+    'run',
+    '--interactive',
+    '--network=none',
+    '--workdir=' .. root,
+    '--volume=' .. root .. ':' .. root .. ':z',
+    '--tmpfs=/tmp',
+    image,
+    'clangd',
+    '--background-index',
+    '--clang-tidy',
+  }
+end
+
+local function host_cmd()
+  return { 'clangd', '--background-index', '--clang-tidy' }
+end
+
+vim.lsp.config('clangd', {
+  name = 'clangd',
+  filetypes = { 'c', 'cpp', 'objc', 'objcpp', 'cuda' },
+  root_markers = ROOT_MARKERS,
+
+  -- fallback cmd; updated per-root via on_new_config
+  cmd = (vim.env.CLANGD_IMAGE and container_cmd(vim.uv.cwd())) or host_cmd(),
+
+  on_new_config = function(new_config, new_root_dir)
+    if vim.env.CLANGD_IMAGE and vim.env.CLANGD_IMAGE ~= '' then
+      new_config.cmd = container_cmd(new_root_dir)
+    else
+      new_config.cmd = host_cmd()
+    end
+  end,
+
+  before_init = function(params)
+    -- Helps with containerized servers, harmless on host
+    params.processId = vim.NIL
+  end,
+})
+
+vim.lsp.enable 'clangd'
+
+-- Quick manual commands for debugging:
+--   :LspInfo
+--   :lua vim.print(vim.lsp.get_clients({bufnr=0}))
+--   :e ~/.local/state/nvim/lsp.log
 
 -- The line beneath this is called `modeline`. See `:help modeline`
 -- vim: ts=2 sts=2 sw=2 et
