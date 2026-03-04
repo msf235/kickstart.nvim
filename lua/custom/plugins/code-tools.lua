@@ -179,7 +179,8 @@ return {
       -- Keep your function-based format_on_save, but make TeX NOT fall back to LSP.
       format_on_save = function(bufnr)
         local ft = vim.bo[bufnr].filetype
-        local disable_filetypes = { c = true, cpp = true }
+        -- local disable_filetypes = { c = true, cpp = true }
+        local disable_filetypes = {}
         if disable_filetypes[ft] then
           return nil
         end
@@ -196,8 +197,10 @@ return {
         python = { 'isort', 'black' },
         tex = { 'latexindent' },
         plaintex = { 'latexindent' },
-        text = { 'par_textwrap' },
-        markdown = { 'par_textwrap' },
+        cpp = { 'clang_format' },
+        c = { 'clang_format' },
+        -- text = { 'par_textwrap' },
+        -- markdown = { 'par_textwrap' },
       },
 
       -- Configure latexindent with flags that enforce hard-wrap
