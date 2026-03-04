@@ -193,11 +193,14 @@ return {
 
       formatters_by_ft = {
         lua = { 'stylua' },
-        python = { 'isort', 'black' },
+        -- python = { 'isort', 'black' },
+        python = { 'isort', 'ruff' },
         tex = { 'latexindent' },
         plaintex = { 'latexindent' },
         text = { 'par_textwrap' },
         markdown = { 'par_textwrap' },
+        json = { 'prettier' },
+        jsonc = { 'prettier' },
       },
 
       -- Configure latexindent with flags that enforce hard-wrap
@@ -213,6 +216,9 @@ return {
           command = 'par',
           args = { 'w80' }, -- wrap to 80 cols; change if you prefer
           stdin = true,
+        },
+        prettier = {
+          prepend_args = { '--print-width', '80' },
         },
       },
     },
