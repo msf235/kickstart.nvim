@@ -151,7 +151,11 @@ return {
   {
     'aserowy/tmux.nvim',
     config = function()
-      return require('tmux').setup()
+      return require('tmux').setup {
+        copy_sync = {
+          sync_clipboard = false,
+        },
+      }
     end,
   },
   { -- Highlight, edit, and navigate code

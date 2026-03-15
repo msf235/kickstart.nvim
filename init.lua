@@ -117,7 +117,6 @@ vim.o.showmode = false
 -- vim.schedule(function()
 --   vim.o.clipboard = 'unnamedplus'
 -- end)
-vim.g.clipboard = 'osc52'
 
 -- Enable break indent
 vim.o.breakindent = true
@@ -350,13 +349,13 @@ require('lazy').setup({
   --
   --  Uncomment the following line and add your plugins to `lua/custom/plugins/*.lua` to get going.
   { import = 'custom.plugins' },
-  -- {
-  --   'folke/persistence.nvim',
-  --   event = 'BufReadPre', -- this will only start session saving when an actual file was opened
-  --   opts = {
-  --     -- add any custom options here
-  --   },
-  -- },
+  {
+    'folke/persistence.nvim',
+    event = 'BufReadPre', -- this will only start session saving when an actual file was opened
+    opts = {
+      -- add any custom options here
+    },
+  },
   { -- Collection of various small independent plugins/modules
     'echasnovski/mini.nvim',
     config = function()

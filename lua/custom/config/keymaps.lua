@@ -1,10 +1,12 @@
 -- lua/custom/config/keymaps.lua
 
 -- Clipboard integration
+local yank_plus = vim.fn.expand '~/.local/bin/nvim-yank-plus'
+
 vim.g.clipboard = {
   name = 'system+tmux+file',
   copy = {
-    ['+'] = { 'nvim-yank-plus' },
+    ['+'] = { yank_plus },
   },
   paste = {
     ['+'] = { 'tmux', 'save-buffer', '-' },
