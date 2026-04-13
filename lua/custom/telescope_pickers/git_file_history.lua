@@ -45,16 +45,13 @@ local function relpath_from_root(root, abs_path)
   return nil
 end
 
-local function file_commits(root, relpath)
+local function file_commits(root)
   local args = {
     'log',
     '--all',
-    '--follow',
     '--date=short',
     '--decorate=short',
     '--pretty=format:%H%x09%h%x09%ad%x09%d%x09%s',
-    '--',
-    relpath,
   }
   local r = job_capture('git', args, root)
   if r.code ~= 0 then
@@ -81,7 +78,11 @@ local function git_show_file(root, full_hash, relpath)
   local spec = string.format('%s:%s', full_hash, relpath)
   local r = job_capture('git', { 'show', spec }, root)
   if r.code ~= 0 then
-    return nil, table.concat(r.stderr, '\n')
+    local err = table.concat(r.stderr, '\n')
+    if err:match("Path '.*' does not exist") or err:match('exists on disk, but not in') then
+      return nil, 'File does not exist in this commit.'
+    end
+    return nil, err
   end
   return r.stdout
 end
@@ -141,7 +142,7 @@ function M.open()
     return
   end
 
-  local commits, err = file_commits(root, rel)
+  local commits, err = file_commits(root)
   if not commits then
     vim.notify(('git log failed: %s'):format(err or 'unknown error'), vim.log.levels.ERROR)
     return
