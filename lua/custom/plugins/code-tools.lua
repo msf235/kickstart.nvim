@@ -194,9 +194,14 @@ return {
 
       formatters_by_ft = {
         lua = { 'stylua' },
-        python = { 'isort', 'black' },
+        -- python = { 'isort', 'black' },
+        python = { 'isort', 'ruff' },
         tex = { 'latexindent' },
         plaintex = { 'latexindent' },
+        text = { 'par_textwrap' },
+        markdown = { 'par_textwrap' },
+        json = { 'prettier' },
+        jsonc = { 'prettier' },
         cpp = { 'clang_format' },
         c = { 'clang_format' },
         -- text = { 'par_textwrap' },
@@ -216,6 +221,9 @@ return {
           command = 'par',
           args = { 'w80' }, -- wrap to 80 cols; change if you prefer
           stdin = true,
+        },
+        prettier = {
+          prepend_args = { '--print-width', '80' },
         },
       },
     },
@@ -408,6 +416,7 @@ return {
     init = function()
       -- VimTeX configuration goes here, e.g.
       vim.g.vimtex_view_method = 'zathura'
+      -- vim.g.vimtex_view_method = 'skim'
       vim.g.vimtex_compiler_latexmk = { out_dir = 'build' }
     end,
   },
