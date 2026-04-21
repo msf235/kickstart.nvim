@@ -1,0 +1,38 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+OUT="/tmp/nvim-clipboard.txt"
+TMP="$(mktemp /tmp/nvim-clipboard.XXXXXX)"
+
+cat > "$TMP"
+
+# 1) tmux paste buffer (best-effort)
+if [[ -n "${TMUX:-}" ]] && command -v tmux >/dev/null 2>&1; then
+  tmux load-buffer - < "$TMP" || true
+fi
+
+# 2) system clipboard on *this* machine (best-effort)
+copy_ok=0
+
+# macOS
+if command -v pbcopy >/dev/null 2>&1; then
+  pbcopy < "$TMP" && copy_ok=1 || true
+fi
+
+# Wayland
+if [[ "$copy_ok" -eq 0 ]] && [[ -n "${WAYLAND_DISPLAY:-}" ]] && command -v wl-copy >/dev/null 2>&1; then
+  wl-copy < "$TMP" && copy_ok=1 || true
+fi
+
+# X11
+if [[ "$copy_ok" -eq 0 ]] && [[ -n "${DISPLAY:-}" ]] && command -v xclip >/dev/null 2>&1; then
+  xclip -selection clipboard < "$TMP" && copy_ok=1 || true
+fi
+
+if [[ "$copy_ok" -eq 0 ]] && [[ -n "${DISPLAY:-}" ]] && command -v xsel >/dev/null 2>&1; then
+  xsel --clipboard --input < "$TMP" && copy_ok=1 || true
+fi
+
+# 3) atomic file update (for host pull or other uses)
+mv -f "$TMP" "$OUT"
+

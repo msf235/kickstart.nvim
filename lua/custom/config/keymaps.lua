@@ -45,26 +45,49 @@ vim.keymap.set('x', '<C-/>', 'gc', { remap = true, desc = 'Toggle comment (visua
 -- Treesitter scope jumps ([c and ]c)
 --------------------------------------------------------------------------------
 
+local function get_node_at_cursor()
+  local ok, node = pcall(vim.treesitter.get_node)
+  if ok then
+    return node
+  end
+end
+
+local function is_scope_node(node)
+  local type = node:type()
+  return type == 'function_definition'
+    or type == 'function_declaration'
+    or type == 'method_definition'
+    or type == 'if_statement'
+    or type == 'for_statement'
+    or type == 'while_statement'
+    or type == 'class_definition'
+    or type == 'do_statement'
+    or type:find 'function'
+    or type:find 'method'
+    or type:find 'class'
+    or type:find 'struct'
+end
+
+local function get_scope_chain(node)
+  local scopes = {}
+  while node do
+    if is_scope_node(node) then
+      table.insert(scopes, node)
+    end
+    node = node:parent()
+  end
+  return scopes
+end
+
 local function jump_scope_start()
-  local ts_utils = require 'nvim-treesitter.ts_utils'
-  local node = ts_utils.get_node_at_cursor()
+  local node = get_node_at_cursor()
   if not node then
     vim.notify('No Treesitter node under cursor', vim.log.levels.WARN)
     return
   end
 
   while node do
-    local type = node:type()
-    if
-      type == 'function_definition'
-      or type == 'function_declaration'
-      or type == 'method_definition'
-      or type == 'if_statement'
-      or type == 'for_statement'
-      or type == 'while_statement'
-      or type == 'class_definition'
-      or type == 'do_statement'
-    then
+    if is_scope_node(node) then
       local start_row = node:start()
       vim.api.nvim_win_set_cursor(0, { start_row + 1, 0 })
       return
@@ -76,25 +99,14 @@ local function jump_scope_start()
 end
 
 local function jump_scope_end()
-  local ts_utils = require 'nvim-treesitter.ts_utils'
-  local node = ts_utils.get_node_at_cursor()
+  local node = get_node_at_cursor()
   if not node then
     vim.notify('No Treesitter node under cursor', vim.log.levels.WARN)
     return
   end
 
   while node do
-    local type = node:type()
-    if
-      type == 'function_definition'
-      or type == 'function_declaration'
-      or type == 'method_definition'
-      or type == 'if_statement'
-      or type == 'for_statement'
-      or type == 'while_statement'
-      or type == 'class_definition'
-      or type == 'do_statement'
-    then
+    if is_scope_node(node) then
       local end_row = node:end_()
       vim.api.nvim_win_set_cursor(0, { end_row + 1, 0 })
       return
@@ -151,21 +163,18 @@ vim.keymap.set('x', ']c', visual_extend_after_jump(jump_scope_end), {
 })
 
 --------------------------------------------------------------------------------
--- Treesitter "context" jumps ([[ and ]]) using nvim-treesitter.locals
+-- Treesitter context jumps ([[ and ]]) using builtin node traversal
 --------------------------------------------------------------------------------
 
 local function jump_to_context_edge(to_end)
-  local ts_utils = require 'nvim-treesitter.ts_utils'
-  local ts_locals = require 'nvim-treesitter.locals'
-
-  local node = ts_utils.get_node_at_cursor()
+  local node = get_node_at_cursor()
   if not node then
     vim.notify('No Treesitter node under cursor', vim.log.levels.WARN)
     return
   end
 
   local bufnr = vim.api.nvim_get_current_buf()
-  local scopes = ts_locals.get_scope_tree(node, bufnr)
+  local scopes = get_scope_chain(node)
   if not scopes or #scopes == 0 then
     vim.notify('No enclosing context found', vim.log.levels.INFO)
     return
