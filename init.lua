@@ -577,13 +577,6 @@ if vim.fn.argc() == 0 and vim.fn.empty(vim.v.this_session) == 1 then
   end)
 end
 
-vim.cmd [[
-  highlight TreesitterContext guibg=#e3e3dd guifg=#073642
-  highlight TreesitterContextLineNumber guifg=#586e75
-  highlight TreesitterContextBottom gui=underline guisp=#93a1a1
-  highlight TreesitterContextLineNumberBottom gui=underline guisp=#93a1a1
-]]
-
 -- local capabilities = vim.lsp.protocol.make_client_capabilities()
 -- local ok_cmp, cmp_lsp = pcall(require, 'cmp_nvim_lsp')
 -- if ok_cmp then
