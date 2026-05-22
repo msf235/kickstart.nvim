@@ -177,9 +177,19 @@ vim.o.confirm = true
 -- [[ Basic Keymaps ]]
 --  See `:help vim.keymap.set()`
 
--- Clear highlights on search when pressing <Esc> in normal mode
---  See `:help hlsearch`
-vim.keymap.set('n', '<Esc>', '<cmd>nohlsearch<CR>')
+-- Clear highlights on search when pressing <Esc> in normal mode.
+-- If a floating window is open (like LSP hover), close it first.
+vim.keymap.set('n', '<Esc>', function()
+  for _, win in ipairs(vim.api.nvim_list_wins()) do
+    local config = vim.api.nvim_win_get_config(win)
+    if config.relative ~= '' then
+      vim.api.nvim_win_close(win, false)
+      return
+    end
+  end
+
+  vim.cmd.nohlsearch()
+end)
 
 -- Diagnostic keymaps
 vim.keymap.set('n', '<leader>q', vim.diagnostic.setloclist, { desc = 'Open diagnostic [Q]uickfix list' })
@@ -678,6 +688,12 @@ vim.lsp.enable 'clangd'
 --   :LspInfo
 --   :lua vim.print(vim.lsp.get_clients({bufnr=0}))
 --   :e ~/.local/state/nvim/lsp.log
+
+vim.api.nvim_set_hl(0, 'MatchParen', {
+  -- fg = '#ffffff',
+  -- bg = '#5f5f87',
+  bold = true,
+})
 
 -- The line beneath this is called `modeline`. See `:help modeline`
 -- vim: ts=2 sts=2 sw=2 et

@@ -30,6 +30,19 @@ return {
       'saghen/blink.cmp',
     },
     config = function()
+      vim.lsp.handlers['textDocument/hover'] = function(err, result, ctx, config)
+        local bufnr, winnr = vim.lsp.handlers.hover(err, result, ctx, config)
+        if bufnr and winnr then
+          vim.keymap.set('n', '<Esc>', function()
+            if vim.api.nvim_win_is_valid(winnr) then
+              vim.api.nvim_win_close(winnr, false)
+            end
+          end, { buffer = bufnr, silent = true })
+        end
+
+        return bufnr, winnr
+      end
+
       -- Brief aside: **What is LSP?**
       --
       -- LSP is an initialism you've probably heard, but might not understand what it is.
@@ -127,6 +140,7 @@ return {
           -- Fuzzy find all the symbols in your current workspace.
           --  Similar to document symbols, except searches over your entire project.
           map('gW', require('telescope.builtin').lsp_dynamic_workspace_symbols, 'Open Workspace Symbols')
+          map('K', vim.lsp.buf.hover, 'Hover Documentation')
 
           -- This function resolves a difference between neovim nightly (version 0.11) and stable (version 0.10)
           ---@param client vim.lsp.Client
