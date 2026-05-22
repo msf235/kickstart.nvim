@@ -177,9 +177,19 @@ vim.o.confirm = true
 -- [[ Basic Keymaps ]]
 --  See `:help vim.keymap.set()`
 
--- Clear highlights on search when pressing <Esc> in normal mode
---  See `:help hlsearch`
-vim.keymap.set('n', '<Esc>', '<cmd>nohlsearch<CR>')
+-- Clear highlights on search when pressing <Esc> in normal mode.
+-- If a floating window is open (like LSP hover), close it first.
+vim.keymap.set('n', '<Esc>', function()
+  for _, win in ipairs(vim.api.nvim_list_wins()) do
+    local config = vim.api.nvim_win_get_config(win)
+    if config.relative ~= '' then
+      vim.api.nvim_win_close(win, false)
+      return
+    end
+  end
+
+  vim.cmd.nohlsearch()
+end)
 
 -- Diagnostic keymaps
 vim.keymap.set('n', '<leader>q', vim.diagnostic.setloclist, { desc = 'Open diagnostic [Q]uickfix list' })
@@ -226,14 +236,6 @@ vim.api.nvim_create_autocmd('TextYankPost', {
     vim.hl.on_yank()
   end,
 })
-
--- vim.api.nvim_echo({ { 'INIT.LUA: early echo test', 'WarningMsg' } }, true, {})
-
--- pcall(require, 'trace_clangd')
-
--- pcall(require, 'trace_require_lspconfig.lua')
-
--- pcall(require, 'trace_vim_lsp_enable')
 
 -- [[ Install `lazy.nvim` plugin manager ]]
 --    See `:help lazy.nvim.txt` or https://github.com/folke/lazy.nvim for more info
@@ -519,7 +521,7 @@ vim.keymap.set('n', 'gb', ':GoToBreakpoint<CR>', { silent = true, desc = 'Go To 
 -- Set descriptions for which-key
 vim.keymap.set('n', '<leader>d', '', { desc = '+diff / git' })
 vim.keymap.set('n', '<leader>s', '', { desc = 'search' })
-vim.keymap.set('n', '<leader>u', '', { desc = 'ui' })
+-- vim.keymap.set('n', '<leader>u', '', { desc = 'ui' })
 
 require('luasnip.loaders.from_vscode').lazy_load { paths = { './snippets' } }
 
@@ -576,13 +578,6 @@ if vim.fn.argc() == 0 and vim.fn.empty(vim.v.this_session) == 1 then
     end
   end)
 end
-
-vim.cmd [[
-  highlight TreesitterContext guibg=#e3e3dd guifg=#073642
-  highlight TreesitterContextLineNumber guifg=#586e75
-  highlight TreesitterContextBottom gui=underline guisp=#93a1a1
-  highlight TreesitterContextLineNumberBottom gui=underline guisp=#93a1a1
-]]
 
 -- local capabilities = vim.lsp.protocol.make_client_capabilities()
 -- local ok_cmp, cmp_lsp = pcall(require, 'cmp_nvim_lsp')
@@ -693,6 +688,12 @@ vim.lsp.enable 'clangd'
 --   :LspInfo
 --   :lua vim.print(vim.lsp.get_clients({bufnr=0}))
 --   :e ~/.local/state/nvim/lsp.log
+
+vim.api.nvim_set_hl(0, 'MatchParen', {
+  -- fg = '#ffffff',
+  -- bg = '#5f5f87',
+  bold = true,
+})
 
 -- The line beneath this is called `modeline`. See `:help modeline`
 -- vim: ts=2 sts=2 sw=2 et
