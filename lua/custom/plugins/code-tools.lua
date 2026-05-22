@@ -213,8 +213,9 @@ return {
         latexindent = {
           -- Read TeX from STDIN and write formatted TeX to STDOUT
           -- -m = modify line breaks (hard-wrap)
+          -- -y = override default settings inline
           -- -l <file> = use project-local yaml
-          args = { '-m', '-l', '.latexindent.yaml', '-' },
+          args = { '-m', "-y=defaultIndent:'  '", '-l', '.latexindent.yaml', '-' },
           stdin = true,
         },
         par_textwrap = {
@@ -415,7 +416,8 @@ return {
     -- tag = "v2.15", -- uncomment to pin to a specific release
     init = function()
       -- VimTeX configuration goes here, e.g.
-      vim.g.vimtex_view_method = 'skim'
+      vim.g.vimtex_view_method = 'zathura_simple'
+      -- vim.g.vimtex_view_method = 'skim'
       vim.g.vimtex_compiler_latexmk = { out_dir = 'build' }
     end,
   },
