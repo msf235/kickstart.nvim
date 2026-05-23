@@ -39,7 +39,7 @@ return {
 
         { '<localleader>ce', group = 'Eval', mode = { 'n', 'x' } },
         { '<localleader>ce!', desc = 'Eval form and replace', mode = 'n' },
-        { '<localleader>ceE', desc = 'Eval selection/motion', mode = { 'n', 'x' } },
+        { '<localleader>cE', desc = 'Eval selection/motion', mode = { 'n', 'x' } },
         { '<localleader>ceb', desc = 'Eval buffer', mode = 'n' },
         { '<localleader>cece', desc = 'Eval form as comment', mode = 'n' },
         { '<localleader>cecr', desc = 'Eval root as comment', mode = 'n' },
@@ -51,6 +51,9 @@ return {
         { '<localleader>cep', desc = 'Eval previous', mode = 'n' },
         { '<localleader>cer', desc = 'Eval root form', mode = 'n' },
         { '<localleader>cew', desc = 'Eval word', mode = 'n' },
+
+        { '<localleader>cg', group = 'Goto', mode = 'n' },
+        { '<localleader>cgd', desc = 'Go to definition', mode = 'n' },
 
         { '<localleader>cl', group = 'Log', mode = 'n' },
         { '<localleader>cle', desc = 'Log in current window', mode = 'n' },
