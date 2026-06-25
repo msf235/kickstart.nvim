@@ -163,6 +163,24 @@ return {
     'stevearc/conform.nvim',
     event = { 'BufWritePre' },
     cmd = { 'ConformInfo' },
+    init = function()
+      _G.wparwrap = function(width)
+        width = tonumber(width)
+        if not width then
+          vim.notify('wparwrap requires a numeric width', vim.log.levels.ERROR)
+          return
+        end
+
+        require('conform').formatters.par_textwrap.args = { 'w' .. width }
+      end
+
+      vim.api.nvim_create_user_command('Wparwrap', function(args)
+        _G.wparwrap(args.args)
+      end, {
+        nargs = 1,
+        desc = 'Set par text wrap width for this Neovim session',
+      })
+    end,
     keys = {
       {
         '<leader>f',
@@ -178,6 +196,10 @@ return {
 
       -- Keep your function-based format_on_save, but make TeX NOT fall back to LSP.
       format_on_save = function(bufnr)
+        if vim.g.disable_autoformat or vim.b[bufnr].disable_autoformat then
+          return nil
+        end
+
         local ft = vim.bo[bufnr].filetype
         -- local disable_filetypes = { c = true, cpp = true }
         local disable_filetypes = {}
