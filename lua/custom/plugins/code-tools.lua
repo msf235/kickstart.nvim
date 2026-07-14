@@ -34,7 +34,6 @@ return {
         -- opts = {},
       },
       'folke/lazydev.nvim',
-      'giuxtaposition/blink-cmp-copilot',
     },
     --- @module 'blink.cmp'
     --- @type blink.cmp.Config
@@ -88,9 +87,8 @@ return {
         -- 'mono' (default) for 'Nerd Font Mono' or 'normal' for 'Nerd Font'
         -- Adjusts spacing to ensure icons are aligned
         nerd_font_variant = 'mono',
-        -- Blink does not expose its default kind icons so you must copy them all (or set your custom ones) and add Copilot
+        -- Blink does not expose its default kind icons so you must copy them all (or set your custom ones)
         kind_icons = {
-          Copilot = '',
           Text = '󰉿',
           Method = '󰊕',
           Function = '󰊕',
@@ -131,15 +129,9 @@ return {
       },
 
       sources = {
-        default = { 'lsp', 'path', 'snippets', 'lazydev', 'copilot' },
+        default = { 'lsp', 'path', 'snippets', 'lazydev' },
         providers = {
           lazydev = { module = 'lazydev.integrations.blink', score_offset = 100 },
-          copilot = {
-            name = 'copilot',
-            module = 'blink-cmp-copilot',
-            score_offset = 100,
-            async = true,
-          },
         },
       },
 
@@ -287,7 +279,7 @@ return {
     cmd = 'Copilot',
     build = ':Copilot auth',
     opts = {
-      suggestion = { enabled = false }, -- disable inline suggestions (use Blink.cmp source)
+      suggestion = { enabled = false },
       panel = { enabled = false },
     },
     config = function(_, opts)
